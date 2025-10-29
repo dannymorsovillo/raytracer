@@ -1,0 +1,3 @@
+"C:\Program Files\CMake\bin\cmake.exe" -E rm -f CMakeFiles\rayTracing.dir/objects.a
+C:\msys64\ucrt64\bin\ar.exe qc CMakeFiles\rayTracing.dir/objects.a @CMakeFiles\rayTracing.dir\objects1.rsp
+C:\msys64\ucrt64\bin\c++.exe -Wl,--whole-archive CMakeFiles\rayTracing.dir/objects.a -Wl,--no-whole-archive -o rayTracing.exe -Wl,--out-implib,librayTracing.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\rayTracing.dir\linkLibs.rsp
