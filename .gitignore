@@ -1,0 +1,16 @@
+# Ignore executables and libraries
+*.exe
+*.dll
+*.obj
+*.o
+*.lib
+*.pdb
+
+# Ignore renders / temporary outputs
+*.ppm
+*.txt
+*.log
+
+# Ignore VSCode and temp folders
+.vscode/
+.idea/
