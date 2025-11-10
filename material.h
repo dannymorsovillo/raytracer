@@ -78,6 +78,16 @@ class dielectric : public material {
         return true;
     }
 
+
+    class diffuse_light : public material {
+  public:
+    explicit diffuse_light(const color& emit) : emit_color(emit) {}
+    bool scatter(const ray&, const hit_record&, color&, ray&) const override { return false; }
+    color emitted() const override { return emit_color; }
+  private:
+    color emit_color;
+};
+
   private:
     double refraction_index;
 

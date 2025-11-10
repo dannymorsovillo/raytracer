@@ -9,12 +9,16 @@
 #include "material.h"
 #include "sphere.h"
 #include "camera.h"
-
+#include "triangle.h"
 
 
 int main() {
 
     hittable_list world;
+
+
+    auto grey = make_shared<lambertian>(color(0.6,0.6,0.6));
+    world.add(make_shared<triangle>(point3(-1,0, -1), point3(1,0,-1), point3(0,1,-1), grey));
 
     auto ground_material = make_shared<lambertian>(color(0.5, 0.5, 0.5));
     world.add(make_shared<sphere>(point3(0,-1000,0), 1000, ground_material));
