@@ -14,3 +14,15 @@
 # Ignore VSCode and temp folders
 .vscode/
 .idea/
+
+# Ignore build folders
+/build/
+/CMakeFiles/
+/CMakeCache.txt
+CMakeLists.txt.user
+Makefile
+cmake_install.cmake
+*.bin
+*.yaml
+
+
