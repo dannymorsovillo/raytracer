@@ -1,111 +1,186 @@
-C++ Ray Tracer
-A physically-based path tracing renderer built in C++ following Ray Tracing in One Weekend by Peter Shirley, with additional features including triangle primitives, direct lighting, and real-time preview capabilities.
-Features
+# C++ Path Tracer
 
-Path tracing with global illumination
-Multiple materials: Lambertian diffuse, metal with adjustable roughness, and dielectric (glass)
-Geometric primitives: spheres and triangles
-Camera controls: adjustable field of view, look-at positioning, and depth of field
-Direct lighting: optional explicit light sampling with soft shadows
-Multi-threaded rendering using OpenMP
-Real-time preview: SFML-based PPM image viewer
-Gamma correction for accurate color display
+A compact, physically-based path tracing renderer implemented in modern C++.  
+This project follows the techniques from Peter Shirley's *Ray Tracing in One Weekend* and extends them with triangle primitives, direct lighting, and a lightweight SFML-based PPM previewer.
 
-Sample Output
-The default scene renders a collection of randomly placed spheres with varying materials (diffuse, metal, glass) on a ground plane, plus three hero spheres and a triangle, demonstrating the full range of the renderer's capabilities.
-Requirements
+---
 
-C++17 compatible compiler (GCC, Clang, or MSVC)
-OpenMP (optional, for parallel rendering)
-SFML 3.x (optional, for the image viewer)
+## Features
 
-Building
-Main Ray Tracer
-bashg++ -std=c++17 -O3 -fopenmp main.cpp -o raytracer
-PPM Viewer (optional)
-bashg++ -std=c++17 -O3 viewer.cpp -o viewer -lsfml-graphics -lsfml-window -lsfml-system
-Usage
-Rendering an Image
-bash./raytracer > image.ppm
-The renderer outputs progress to stderr and the PPM image data to stdout.
-Viewing the Result
-bash./viewer
-The viewer expects an image.ppm file in the current directory.
-Configuration
-Camera Settings
-Edit main.cpp to adjust camera parameters:
-cppcam.aspect_ratio = 16.0 / 9.0;      // Image aspect ratio
-cam.image_width = 1200;              // Width in pixels
-cam.samples_per_pixel = 10;          // Samples per pixel (quality)
-cam.max_depth = 50;                  // Maximum ray bounce depth
-cam.vfov = 20;                       // Vertical field of view (degrees)
-cam.lookfrom = point3(13, 2, 3);    // Camera position
-cam.lookat = point3(0, 0, 0);       // Look-at point
-cam.vup = vec3(0, 1, 0);            // Up vector
-cam.defocus_angle = 0.6;             // Depth of field blur
-cam.focus_dist = 10.0;               // Focus distance
-Direct Lighting (optional)
-Enable explicit light sampling for faster convergence:
-cppcam.enable_direct_lighting = true;
+- Unidirectional path tracing with importance sampling (global illumination)
+- Materials:
+  - Lambertian diffuse
+  - Metal with adjustable roughness (simple microfacet-like model)
+  - Dielectric (glass) with Fresnel handling
+- Geometric primitives:
+  - Spheres
+  - Triangles
+- Optional explicit direct-light sampling with soft shadows
+- Camera controls: aspect ratio, field of view, look-at positioning, depth of field
+- Multi-threaded rendering using OpenMP
+- Real-time preview tool using SFML (optional)
+- Gamma correction (gamma = 2.0) on output
+
+---
+
+## Sample Output
+
+The default scene includes a ground plane, a collection of randomly distributed spheres with different materials (diffuse, metal, glass), three prominent ("hero") spheres, and a triangle to showcase triangle intersection correctness and shading behavior.
+
+---
+
+## Requirements
+
+- C++17 compatible compiler (GCC / Clang / MSVC)
+- OpenMP (optional, recommended for parallel rendering)
+- SFML 3.x (optional, for the PPM viewer)
+
+---
+
+## Building
+
+Open a terminal in the repository root.
+
+- Build the renderer:
+```bash
+g++ -std=c++17 -O3 -fopenmp main.cpp -o raytracer
+```
+
+- Build the optional PPM viewer:
+```bash
+g++ -std=c++17 -O3 viewer.cpp -o viewer -lsfml-graphics -lsfml-window -lsfml-system
+```
+
+Notes:
+- On systems without OpenMP, remove `-fopenmp`. Performance will be single-threaded.
+- Linker flags for SFML may differ by platform/package manager. Adjust as necessary.
+
+---
+
+## Usage
+
+- Render an image (PPM ASCII format to stdout):
+```bash
+./raytracer > image.ppm
+```
+The renderer writes progress information to stderr and the PPM image to stdout.
+
+- View the generated image (optional viewer):
+```bash
+./viewer
+```
+The viewer expects `image.ppm` in the current directory.
+
+---
+
+## Configuration
+
+Most scene and rendering settings are exposed in `main.cpp` and the camera utility. Example camera / rendering parameters that can be edited in `main.cpp`:
+
+```cpp
+// Image
+cam.aspect_ratio = 16.0 / 9.0;
+cam.image_width = 1200;
+cam.samples_per_pixel = 10;
+cam.max_depth = 50;
+
+// Camera (positioning, DOF)
+cam.vfov = 20.0;                        // vertical field of view in degrees
+cam.lookfrom = point3(13, 2, 3);
+cam.lookat = point3(0, 0, 0);
+cam.vup = vec3(0, 1, 0);
+cam.focus_dist = 10.0;
+cam.defocus_angle = 0.6;                // depth of field blur
+
+// Direct lighting (optional)
+cam.enable_direct_lighting = true;
 cam.light_pos = point3(5, 5, -2);
 cam.light_intensity = color(7, 7, 7);
-cam.soft_shadow_samples = 4;         // Samples for soft shadows
-cam.light_radius = 0.5;              // Light source size
-Materials
-Create materials and add objects to the scene:
-cpp// Lambertian (diffuse)
+cam.soft_shadow_samples = 4;
+cam.light_radius = 0.5;
+```
+
+Enable or tune these values to trade off between quality, noise, and render time.
+
+---
+
+## Scene & Materials Example
+
+Objects and materials are created and added to the scene in `main.cpp`. Example snippets:
+
+```cpp
+// Lambertian (diffuse)
 auto diffuse = make_shared<lambertian>(color(0.7, 0.3, 0.3));
 world.add(make_shared<sphere>(point3(0, 0, -1), 0.5, diffuse));
 
 // Metal
-auto metal = make_shared<metal>(color(0.8, 0.8, 0.8), 0.3);  // color, fuzz
+auto metal = make_shared<metal>(color(0.8, 0.8, 0.8), 0.3);
 world.add(make_shared<sphere>(point3(1, 0, -1), 0.5, metal));
 
 // Dielectric (glass)
-auto glass = make_shared<dielectric>(1.5);  // refractive index
+auto glass = make_shared<dielectric>(1.5);
 world.add(make_shared<sphere>(point3(-1, 0, -1), 0.5, glass));
 
 // Triangle
 auto triangle_mat = make_shared<lambertian>(color(0.6, 0.6, 0.6));
 world.add(make_shared<triangle>(
-    point3(-1, 0, -1), 
-    point3(1, 0, -1), 
-    point3(0, 1, -1), 
+    point3(-1, 0, -1),
+    point3(1, 0, -1),
+    point3(0, 1, -1),
     triangle_mat
 ));
-Project Structure
-├── main.cpp              # Scene setup and entry point
-├── viewer.cpp            # SFML-based PPM image viewer
-├── camera.h              # Camera and rendering logic
-├── material.h            # Material definitions (lambertian, metal, dielectric)
-├── hittable.h            # Abstract hittable interface
-├── hittable_list.h       # Scene object container
-├── sphere.h              # Sphere primitive
-├── triangle.h            # Triangle primitive
-├── ray.h                 # Ray class
-├── vec_3.h               # 3D vector math
-├── color.h               # Color utilities and gamma correction
-├── interval.h            # Interval class for ray intersections
-└── rt.h                  # Common utilities and constants
-Performance Tips
+```
 
-Increase samples_per_pixel for better quality (10-500 typical)
-Enable OpenMP with -fopenmp flag for parallel rendering
-Reduce image_width for faster preview renders
-Use max_depth of 50 for typical scenes
-Direct lighting can significantly speed up convergence for scenes with point lights
+---
 
-Technical Details
+## Project Structure
 
-Rendering algorithm: Unidirectional path tracing with importance sampling
-BxDF models: Lambertian diffuse, Cook-Torrance microfacet metal (simplified), and Fresnel dielectric
-Acceleration: Per-thread RNG for thread-safe parallel rendering
-Output format: PPM P3 (ASCII)
-Color space: Linear RGB with gamma 2.0 correction on output
+- main.cpp              — Scene setup and renderer entry point
+- viewer.cpp            — SFML-based PPM image viewer (optional)
+- camera.h              — Camera, projection, and rendering parameters
+- material.h            — Material models (Lambertian, Metal, Dielectric)
+- hittable.h            — Abstract hittable interface
+- hittable_list.h       — Scene object container
+- sphere.h              — Sphere primitive
+- triangle.h            — Triangle primitive and intersection code
+- ray.h                 — Ray class and utilities
+- vec_3.h               — 3D vector math helpers
+- color.h               — Color utilities and gamma correction
+- interval.h            — Intersection interval helpers
+- rt.h                  — Common utilities and constants
 
-License
-Based on Ray Tracing in One Weekend by Peter Shirley. Extended implementation with additional features.
-Acknowledgments
+---
 
-Peter Shirley's Ray Tracing in One Weekend book series
-SFML library for cross-platform graphics
+## Performance Tips
+
+- Increase `samples_per_pixel` for higher quality (typical range 10–500; higher = less noise).
+- Compile with OpenMP enabled (`-fopenmp`) to use multiple CPU cores.
+- Lower `image_width` for faster test renders.
+- Use `max_depth` ≈ 50 for typical scenes; reduce for faster, less accurate renders.
+- Enable explicit direct lighting to improve convergence for scenes with strong local light sources.
+
+---
+
+## Technical Details
+
+- Rendering algorithm: Unidirectional path tracing with importance sampling
+- Material models: Lambertian diffuse, simplified microfacet metal-like model, Fresnel dielectric
+- Threading: Per-thread RNG for safe parallel rendering
+- Output: PPM P3 (ASCII)
+- Color space: Linear RGB with gamma 2.0 correction on write
+
+---
+
+## License
+
+This repository is based on the ideas and examples from Peter Shirley's *Ray Tracing in One Weekend*. See the repository's LICENSE file for full license details (if present). If you plan to reuse code or redistribute, please follow the license terms and acknowledge the original source.
+
+---
+
+## Acknowledgements
+
+- Peter Shirley — Ray Tracing in One Weekend
+- SFML — Simple and Fast Multimedia Library (viewer)
+
+---
+
